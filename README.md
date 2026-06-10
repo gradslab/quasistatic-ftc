@@ -4,6 +4,9 @@
   <img src="media/conv.gif" alt="Trajectory Animation" style="width: 80%; max-width: 600px; height: auto;">
 </div>
 
+For details, see the project page:  
+[https://gradslab.github.io/quasistatic-ftc/](https://gradslab.github.io/quasistatic-ftc/)
+
 
 # Quadrotor Failure Simulation (Drake + Meshcat)
 
