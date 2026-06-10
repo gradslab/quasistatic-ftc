@@ -1,0 +1,37 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+drake-env/
+venv/
+.venv/
+env/
+
+# Local/editor files
+.vscode/
+.idea/
+.DS_Store
+
+# Python packaging/build artifacts
+build/
+dist/
+*.egg-info/
+
+# Test/cache files
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Simulation outputs
+Drake_data.csv
+*.csv
+
+# Logs
+*.log
+
+# Large local media exports, optional
+*.mp4
+*.avi
+*.mov

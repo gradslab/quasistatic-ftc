@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)'], ['$', '$']]
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>QuasiStatic-FTC</title>
+  <meta name="description" content="Quasi-static fault-tolerant feedback control of a quadrotor under rotor failure with provable safety guarantees." />
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1a1a1a;
+      --muted: #666666;
+      --line: #e6e6e6;
+      --accent: #1f4ed8;
+      --soft: #f7f8fa;
+      --maxw: 1000px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      line-height: 1.65;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover { text-decoration: underline; }
+
+    .topbar {
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.96);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+    }
+
+    .topbar-inner {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand {
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--text);
+    }
+
+    .nav {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      font-size: 0.96rem;
+    }
+
+    .page {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 28px 20px 64px;
+    }
+
+    .hero {
+      text-align: center;
+      padding-top: 26px;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.15;
+      margin: 0 0 14px;
+      font-weight: 700;
+    }
+
+    .title-rule {
+      width: 100%;
+      max-width: 900px;
+      height: 1px;
+      background: var(--line);
+      margin: 18px auto 18px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 1.08rem;
+      max-width: 860px;
+      margin: 0 auto 16px;
+    }
+
+    .authors,
+    .affiliations,
+    .note {
+      margin: 10px auto;
+      max-width: 900px;
+      font-size: 1rem;
+    }
+
+    .authors h2 {
+      border-bottom: none;
+      padding-bottom: 0;
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .affiliations,
+    .note {
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 22px 0 28px;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 10px 16px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--text);
+      background: #ffffff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .button:hover {
+      text-decoration: none;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+      border-color: #d4d8df;
+    }
+
+    .teaser,
+    .figure-card {
+      margin: 0 auto 10px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: var(--soft);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.05);
+    }
+
+    .teaser img,
+    .figure-card img {
+      width: 100%;
+      display: block;
+      height: auto;
+      background: var(--soft);
+    }
+
+    .teaser-caption,
+    .figure-caption {
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      color: var(--muted);
+      text-align: left;
+      border-top: 1px solid var(--line);
+      background: #ffffff;
+    }
+
+    section {
+      margin-top: 42px;
+      scroll-margin-top: 80px;
+    }
+
+    h2 {
+      font-size: 1.55rem;
+      margin: 0 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 1.08rem;
+    }
+
+    p { margin: 0 0 14px; }
+
+    .abstract {
+      font-size: 1.02rem;
+      text-align: justify;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #ffffff;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    }
+
+    .card-body { padding: 14px 16px 16px; }
+
+    .card-title {
+      font-weight: 700;
+      margin: 0 0 6px;
+      font-size: 1rem;
+    }
+
+    .card-text {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin: 0;
+    }
+
+    .list {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .list li { margin-bottom: 10px; }
+
+    .method-box {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px 18px;
+      margin: 16px 0;
+    }
+
+    .timeline {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 0.98rem;
+    }
+
+    .timeline th,
+    .timeline td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .timeline th {
+      background: var(--soft);
+      font-weight: 700;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #f8f9fb;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      overflow-x: auto;
+      font-size: 0.94rem;
+      line-height: 1.5;
+    }
+
+    code {
+      background: #f3f4f6;
+      padding: 2px 5px;
+      border-radius: 5px;
+    }
+
+    pre code {
+      background: transparent;
+      padding: 0;
+      border-radius: 0;
+    }
+
+    .footer {
+      margin-top: 48px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    @media (max-width: 820px) {
+      .two-col,
+      .three-col {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav {
+        gap: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">QuasiStatic-FTC</div>
+      <nav class="nav">
+        <a href="#abstract">Abstract</a>
+        <a href="#method">Method</a>
+        <a href="#simulation">Simulation</a>
+        <a href="#code">Code</a>
+        <a href="#bibtex">BibTeX</a>
+      </nav>
+    </div>
+  </div>
+
+  <main class="page">
+    <header class="hero">
+      <h1>Quasi-Static Fault-Tolerant Feedback Control of a Quadrotor under Rotor Failure with Provable Safety Guarantees</h1>
+
+      <div class="title-rule"></div>
+
+      <p class="subtitle">
+        A nonlinear quasi-static feedback controller for path following of a quadrotor UAV under complete single-rotor failure, with path-invariance and local exponential convergence guarantees.
+      </p>
+
+      <div class="authors">
+        <h2>Mohamed Al Lawati and Adeel Akhtar</h2>
+      </div>
+
+      <div class="affiliations">
+        Mohamed Al Lawati is with the Department of Mechanical and Industrial Engineering,
+        Sultan Qaboos University, Muscat, Oman.<br />
+        Adeel Akhtar is with the Department of Mechanical and Industrial Engineering,
+        New Jersey Institute of Technology, Newark, NJ, USA.
+      </div>
+
+      <div class="button-row">
+        <a class="button" href="https://github.com/gradslab/quasistatic-ftc">GitHub</a>
+        <a class="button" href="#simulation">Simulation Results</a>
+        <a class="button" href="#code">How to Run</a>
+        <a class="button" href="#bibtex">BibTeX</a>
+      </div>
+
+      <figure class="teaser">
+        <img src="media/conv.gif" alt="Quadrotor path-following simulation under rotor failure" />
+        <figcaption class="teaser-caption">
+          Drake-Meshcat animation of a quadrotor following a circular spatial path. A complete rotor failure is introduced at \(t=20\) s, after which the fault-tolerant quasi-static feedback controller keeps the vehicle on the desired path.
+        </figcaption>
+      </figure>
+    </header>
+
+    <section id="abstract">
+      <h2>Abstract</h2>
+      <p class="abstract">
+        This project accompanies a nonlinear control framework for a quadrotor unmanned aerial vehicle experiencing a complete single-rotor failure. Given a geometric curve in three-dimensional space, the method characterizes and stabilizes the zero-dynamics manifold, also called the path-following manifold, which represents all feasible motions along the desired path. Stabilizing this manifold ensures path-invariance: if the UAV is initialized on the path with the appropriate transverse conditions, then the closed-loop vehicle remains on the path despite the rotor failure. The proposed quasi-static feedback controller achieves set stabilization without introducing additional dynamic controller states and provides local exponential convergence to the path-following manifold under regularity conditions. The approach is validated in a physics-based Drake simulation with Meshcat visualization.
+      </p>
+    </section>
+
+    <section id="method">
+      <h2>Method</h2>
+
+      <p>
+        The desired path is represented as the intersection of two independent surfaces,
+        \[
+          \mathcal{C}
+          =
+          \{p \in \mathbb{R}^3:
+          h_1(p)=0,\;
+          h_2(p)=0,\;
+          \nabla h_1(p)\times \nabla h_2(p)\neq 0\}.
+        \]
+        The outputs \(h_1\) and \(h_2\) define transverse errors to the path, while a third output \(h_3=s(p)\) parameterizes motion along the path.
+      </p>
+
+      <div class="method-box">
+        <p>
+          The main idea is to use quasi-static feedback to algebraically recover the thrust and then compute the remaining torque inputs through a reduced decoupling matrix. The thrust is obtained from the second derivative of \(h_2\):
+        </p>
+        <p>
+          \[
+            u_t
+            =
+            m
+            \frac{\beta_2-\nu_2}
+                 {\langle \nabla h_2, R_3\rangle},
+            \qquad
+            \nu_2 = -K_2 z^2.
+          \]
+        </p>
+        <p>
+          The remaining inputs \(\tau_2\) and \(\tau_3\) are computed from the fourth derivatives of \(h_1\) and \(h_3\), using a \(2\times 2\) decoupling matrix.
+        </p>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <h3>Key features</h3>
+          <ul class="list">
+            <li>Handles complete single-rotor failure.</li>
+            <li>Uses a static/quasi-static feedback law rather than dynamic extension.</li>
+            <li>Computes thrust algebraically.</li>
+            <li>Reduces the remaining inversion to a \(2\times 2\) decoupling matrix.</li>
+            <li>Separates transverse path stabilization from tangential path motion assignment.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3>Main guarantees</h3>
+          <ul class="list">
+            <li>Local exponential convergence to the path-following manifold.</li>
+            <li>Forward invariance of the desired path under rotor failure.</li>
+            <li>Assignable tangential motion along the path.</li>
+            <li>Bounded internal yaw-related dynamics under locally bounded tangential input.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="simulation">
+      <h2>Simulation Results</h2>
+
+      <p>
+        The implementation uses Drake for physics-based rigid-body simulation and Meshcat for live browser visualization. The UAV tracks a circular path, then experiences a complete rotor failure at \(t=20\) s. The controller switches to the fault-tolerant quasi-static feedback law and continues enforcing path following.
+      </p>
+
+      <figure class="figure-card">
+        <img src="media/BigPicture.png" alt="Simulation snapshots showing quadrotor path convergence, nominal path following, and path following after rotor failure" />
+        <figcaption class="figure-caption">
+          Simulation snapshots from the paper. The motion unfolds in three stages: path convergence, nominal path following, and path following under complete rotor failure. The third stage highlights path invariance despite sudden rotor failure.
+        </figcaption>
+      </figure>
+
+      <div class="three-col">
+        <article class="card">
+          <div class="card-body">
+            <p class="card-title">Stage 1: Path convergence</p>
+            <p class="card-text">
+              The quadrotor approaches the desired circular path from an off-path initial condition.
+            </p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-body">
+            <p class="card-title">Stage 2: Nominal path following</p>
+            <p class="card-text">
+              Before failure, the vehicle follows the desired path with four healthy rotors.
+            </p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-body">
+            <p class="card-title">Stage 3: Rotor failure</p>
+            <p class="card-text">
+              At \(t=20\) s, rotor 1 fails. The rotor color changes in the Meshcat visualization.
+            </p>
+          </div>
+        </article>
+      </div>
+
+      <table class="timeline">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Observed behavior</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0--20 s</td>
+            <td>The quadrotor tracks the circular path in the nominal four-rotor configuration.</td>
+          </tr>
+          <tr>
+            <td>20 s</td>
+            <td>Rotor 1 fails. The rotor color changes in the Meshcat visualization.</td>
+          </tr>
+          <tr>
+            <td>20--40 s</td>
+            <td>The quasi-static fault-tolerant controller compensates for the failure and maintains path-following behavior.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="code">
+      <h2>Code and Reproducibility</h2>
+
+      <div class="two-col">
+        <div>
+          <p>
+            The full implementation is available in the GitHub repository:
+            <a href="https://github.com/gradslab/quasistatic-ftc">gradslab/quasistatic-ftc</a>.
+          </p>
+
+          <p>
+            The repository contains the Drake simulation, Meshcat visualization, the quasi-static feedback controller, and CSV logging for position, attitude, velocity, angular velocity, force, thrust, and torque signals.
+          </p>
+        </div>
+
+        <div>
+          <h3>Recommended environment</h3>
+          <ul class="list">
+            <li>Ubuntu 22.04 or 24.04</li>
+            <li>Python 3.10 or 3.11</li>
+            <li>Drake / pydrake</li>
+            <li>Meshcat</li>
+            <li>NumPy, SciPy, Matplotlib</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>How to Run</h2>
+
+      <pre><code># Clone the repository
+git clone https://github.com/gradslab/quasistatic-ftc.git
+cd quasistatic-ftc
+
+# Create and activate a clean Python environment
+python3.10 -m venv drake-env
+source drake-env/bin/activate
+
+# Upgrade pip
+pip install --upgrade pip
+
+# Install Drake
+pip install drake
+
+# Install additional dependencies
+pip install numpy scipy matplotlib meshcat
+
+# Verify Drake installation
+python -c "import pydrake; print('Drake installed')"
+
+# Run the simulation
+python main.py</code></pre>
+
+      <p>
+        When the simulation starts, open the Meshcat URL printed in the terminal, typically:
+      </p>
+
+      <pre><code>http://localhost:7004</code></pre>
+
+      <p>
+        The simulation writes logged data to:
+      </p>
+
+      <pre><code>Drake_data.csv</code></pre>
+    </section>
+
+    <section>
+      <h2>Repository Structure</h2>
+
+      <pre><code>.
+├── main.py
+├── qsf_controller.py
+├── draw_curve.py
+├── UAV_visual.py
+├── media/
+│   └── conv.gif
+├── docs/
+│   ├── index.html
+│   └── media/
+│       ├── conv.gif
+│       └── BigPicture.png
+├── Drake_data.csv        # generated after running
+└── README.md</code></pre>
+    </section>
+
+    <section id="bibtex">
+      <h2>BibTeX</h2>
+
+      <pre><code>@inproceedings{allawati2026quasistaticftc,
+title     = {Quasi-Static Fault-Tolerant Feedback Control of a Quadrotor under Rotor Failure with Provable Safety Guarantees},
+author    = {Al Lawati, Mohamed and Akhtar, Adeel},
+booktitle = {Proceedings of the 2026 IEEE Conference on Control Technology and Applications (CCTA)},
+year      = {2026},
+address   = {Vancouver, BC, Canada},
+note      = {Accepted}
+}</code></pre>
+    </section>
+
+    <div class="footer">
+      Contact:
+      <a href="mailto:mlawati@squ.edu.om">mlawati@squ.edu.om</a>,
+      <a href="mailto:adeel.akhtar@njit.edu">adeel.akhtar@njit.edu</a>
+      &nbsp;·&nbsp;
+      Repository:
+      <a href="https://github.com/gradslab/quasistatic-ftc">gradslab/quasistatic-ftc</a>
+      &nbsp;·&nbsp;
+      License: MIT
+    </div>
+  </main>
+</body>
+</html>
